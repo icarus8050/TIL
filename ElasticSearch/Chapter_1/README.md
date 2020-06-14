@@ -34,7 +34,7 @@
 
  검색엔진은 관계형 데이터베이스에서는 불가능한 비정형 데이터를 색인하고 검색할 수 있습니다. 형태소 분석을 통해 사람이 구사하는 자연어의 처리가 가능해지고 역색인 구조를 바탕으로 빠른 검색 속도를 보장합니다.
 
-<table style="border-collapse: collapse; width: 100%;" border="1" data-ke-style="style8"><tbody><tr><td style="width: 50%;">엘라스틱 서치</td><td style="width: 50%;">관계형 데이터베이스</td></tr><tr><td style="width: 50%;">인덱스 (Index)</td><td style="width: 50%;">데이터베이스 (Database)</td></tr><tr><td style="width: 50%;">샤드 (Shard)</td><td style="width: 50%;">파티션 (Partition)</td></tr><tr><td style="width: 50%;">타입 (Type)</td><td style="width: 50%;">테이블 (Table)</td></tr><tr><td style="width: 50%;">문서 (Document)</td><td style="width: 50%;">행 (Row)</td></tr><tr><td style="width: 50%;">필드 (Field)</td><td style="width: 50%;">열 (Column)</td></tr><tr><td style="width: 50%;">매핑 (Mapping)</td><td style="width: 50%;">스키마 (Schema)</td></tr><tr><td style="width: 50%;">Query DSL</td><td style="width: 50%;">SQL</td></tr></tbody></table>
+![데이터베이스와 엘라스틱서치의 개념 비교](./images/rdb_elasticsearch.png)
 
  위의 표는 엘라스틱서치와 관계형 데이터베이스의 주요 개념을 비교하여 나타낸 테이블입니다. **엘라스틱서치 6.0 이하 버전에서는 하나의 인덱스 내부에 기능에 따라 데이터를 분류하고 여러 개의 타입을 만들어 사용했지만 현재는 하나의 인덱스에 하나의 타입만을 구성하도록 바뀌었습니다.**
 
