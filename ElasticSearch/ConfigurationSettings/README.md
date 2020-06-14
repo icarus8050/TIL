@@ -84,20 +84,20 @@
 
 #### node.master
 
-마스터 후보 노드 여부를 설정합니다. false인 경우 이 노드는 마스터 노드로 선출이 불가능합니다. 모든 클러스터는 1개의 마스터 노드가 존재하며 마스터 노드가 다운되거나 끊어진 경우 남은 마스터 후보 노드들 중에서 새로운 마스터 노드를 선출합니다.
+마스터 후보 노드 여부를 설정합니다. true로 설정된 경우 클러스터의 제어을 통해 마스터 노드로 선택될 자격을 갖게 됩니다. master node의 경우 데이터 인덱싱, 검색 등에 의해 CPU, 메모리, IO 리소스 소모가 클 수 있기 때문에 부하를 받지 않도록 master와 data node를 구분하여 운영하기를 권장합니다. 또한 client node 등에서 master node로 인덱싱, 검색 요청 등을 라우팅 할 경우 master node에 부담이 될 수 있기 때문에 가능한 아무런 일도 시키지 않고 master 역할에만 집중할 수 있도록 설정해주는 것이 좋습니다. (기본값은 true 입니다.)
 
 #### node.data
 
-노드가 데이터를 저장하도록 지정합니다. false인 경우 이 노드는 데이터를 저장하지 않습니다.
+데이터 노드로의 동작 여부를 설정합니다. 데이터 노드는 색인된 Document를 포함한 샤드들을 저장합니다. 데이터 노드는 CRUD, 검색, 집계 기능을 수행합니다. 이러한 연산들은 CPU와 메모리에 많은 부하가 발생하므로, 리소스들을 모니터링하고, 부하가 발생하면 데이터 노드를 추가하도록 해야 합니다. (기본값은 true 입니다.)
 
 #### bootstrap.memory\_lock
 
-엘라스틱서치가 사용중인 힙메모리 영역이 다른 자바 프로그램이 간섭하지 못하도록 미리 점유하는 설정입니다. 항상 true로 놓고 사용하는 것을 권장합니다.
+엘라스틱서치가 기동될 때, 할당 받은 메모리에 스왑이 발생하지 않도록 Lock을 거는 옵션입니다. 항상 true로 놓고 사용하는 것을 권장합니다.
 
 ---
 
 ## 참고자료
 
-[https://esbook.kimjmin.net/02-install/2.3-elasticsearch/2.3.2-elasticsearch.yml](https://esbook.kimjmin.net/02-install/2.3-elasticsearch/2.3.2-elasticsearch.yml)
+[https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-node.html](https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-node.html)
 
 [엘라스틱서치 실무 가이드](http://www.kyobobook.co.kr/product/detailViewKor.laf?ejkGb=KOR&mallGb=KOR&barcode=9791158391485&orderClick=LEa&Kc=) <<권택환, 김동우, 김흥래, 박진현, 최용호, 황희정 지음>>
