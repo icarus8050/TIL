@@ -1,8 +1,8 @@
 클러스터, 노드, 샤드의 관계는 아래의 그림과 같습니다.
 
-위의 구조는 하나의 클러스터에 노드1, 노드2로 총 2개의 물리적 노드로 구성되어 있습니다. 엘라스틱서치 클러스터는 인덱스의 문서를 조회할 때 마스터 노드를 통해 2개의 노드를 모두 조회해서 각 데이터를 취합한 후 결과를 하나로 합쳐서 반환합니다.
+![cluster](./images/cluster.png)
 
-[##_Image|kage@beMmS9/btqESpupm7L/1gKipw3l0p3MaKUOBL1UA0/img.png|alignCenter|data-origin-width="0" data-origin-height="0" data-ke-mobilestyle="widthContent"|엘라스틱서치 실무 가이드 도서||_##]
+위의 구조는 하나의 클러스터에 노드1, 노드2로 총 2개의 물리적 노드로 구성되어 있습니다. 엘라스틱서치 클러스터는 인덱스의 문서를 조회할 때 마스터 노드를 통해 2개의 노드를 모두 조회해서 각 데이터를 취합한 후 결과를 하나로 합쳐서 반환합니다.
 
 현재는 하나의 클러스터만 만들어져 있지만 여러 개의 클러스터를 연결해서 구성할 수도 있으며, 이때는 클러스터의 이름으로 각각을 구분해야 합니다. 클러스터에 있는 노드는 실시간으로 추가, 제거가 가능하기 때문에 가용성이나 확장성 측면에서 매우 유연합니다.
 
@@ -10,7 +10,7 @@
 
 replica shard라는 복제본 덕분에 물리적인 노드 하나가 죽더라도 나머지 노드에 존재하는 replica shard로 전체 데이터를 복구할 수 있습니다. 만약 장애가 발생하면 마스터 노드는 데이터를 재분배하거나 replica shard를 primary shard로 승격시켜 서비스 중단 없는 복구가 가능해집니다. 이러한 동작을 위해 replica shard는 절대로 동일한 데이터를 갖고 있는 primary shard와 같은 노드상에 존재할 수 없습니다. 아래의 상황을 예로 보겠습니다.
 
-[##_Image|kage@bGlMza/btqESpOLTsA/1ToSUNjTrLYZTYsem8Ytmk/img.png|alignCenter|data-origin-width="0" data-origin-height="0" data-ke-mobilestyle="widthContent"|||_##]
+![shard](./images/shard.png)
 
  위 그림과 같은 상태에서 만약 Node#1 노드에 장애가 발생하더라도 나머지 노드에 모든 replica shard가 존재하므로 장애 상황에서도 중단없이 복구 가능합니다. 이러한 점에서 아래와 같은 식을 유추할 수 있습니다.
 
