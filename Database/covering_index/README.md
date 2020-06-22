@@ -69,6 +69,31 @@ on i.member_no = m.member_no;
 
  커버링 인덱스의 실행 계획을 보면 extra 항목에 Using index가 나타납니다. 이 쿼리는 인덱스에 포함된 컬럼(group\_no)만으로도 select 절의 컬럼(서브 쿼리의 select 절)을 완성할 수 있습니다. 즉, 디스크에 접근하지 않고도 검색하고자 하는 row의 인덱스를 추출해올 수 있습니다. **결과적으로 추출된 인덱스만으로 데이터 블록에 접근하여 원하는 데이터를 가져올 수 있게 됩니다.** 위의 경우 서브 쿼리에서 1000건의 인덱스를 추출한 후에 데이터 블록에 접근하게 됩니다.
 
+## 클러스터드 인덱스(Clustered Index)와 넌 클러스터드 인덱스(Non Clustered Index)
+
+### Clustered Index
+
+-   Primary Key를 대상으로 생성합니다.
+-   Primary Key가 없을 경우 Unique Key를 대상으로 생성합니다.
+-   Primary Key 또는 Unique Key 둘 다 없을 경우에는 6 Byte의 Hidden Key를 생성합니다. (rowid)
+-   Clustered Index를 기준으로 데이터 레코드를 물리적으로 정렬합니다. (**이는 Primary Key가 변경되면 그 레코드의 물리적 위치까지 변경되어야 한다는 의미입니다. 즉, Primary Key에 대한 의존도가 상당하기 때문에 신중하게 결정해야합니다.**)
+-   테이블 당 1개만 존재 가능합니다.
+
+### Non Clustered Index
+
+-   데이터를 물리적으로 재배열하지 않습니다.
+-   일반적인 인덱스를 말합니다.
+-   테이블 당 여러 개 생성할 수 있습니다.
+-   별도의 공간에 인덱스 테이블을 생성하여 데이터를 정렬합니다.
+
+ 다음 그림은 Non Clustered Index와 Clustered Index를 활용하여 데이터를 탐색하는 과정을 보여줍니다.
+
+[##_Image|kage@cHgPGN/btqE4rqZWzr/Yc1IJ6zPS1dDuELIxU2DGK/img.png|alignCenter|data-origin-width="0" data-origin-height="0" data-ke-mobilestyle="widthContent"|https://jojoldu.tistory.com/476||_##]
+
+ age 컬럼을 인덱스로 생성하였고, Non Clustered Index에서 age를 기준으로 정렬되어 있습니다. 그리고 Non Clustered Index에 인덱스의 컬럼 값과 Clustered Index의 값을 포함하고 있습니다. 이는 Non Clustered Index에는 실제 데이터 레코드가 없고 Clustered Index만이 해당 데이터 레코드를 알고 있기 때문입니다.
+
+ 여기서 앞서 살펴보았던 커버링 인덱스의 개념을 이해할 수 있습니다. **즉, 실제 데이터의 접근이 없이 인덱스의 컬럼만으로 쿼리를 완성하는 것입니다.**
+
 ---
 
 ## 참고자료
@@ -78,6 +103,8 @@ on i.member_no = m.member_no;
 [https://jojoldu.tistory.com/476](https://jojoldu.tistory.com/476)
 
 [https://mozi.tistory.com/320](https://mozi.tistory.com/320)
+
+[https://12bme.tistory.com/149](https://12bme.tistory.com/149)
 
 [https://lng1982.tistory.com/144](https://lng1982.tistory.com/144)
 
