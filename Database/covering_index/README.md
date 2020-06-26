@@ -94,6 +94,31 @@ on i.member_no = m.member_no;
 
  여기서 앞서 살펴보았던 커버링 인덱스의 개념을 이해할 수 있습니다. **즉, 실제 데이터의 접근이 없이 인덱스의 컬럼만으로 쿼리를 완성하는 것입니다.**
 
+## WHERE + GROUP BY
+
+ group by에서 인덱스는 아래의 조건에서 적용됩니다.
+
+-   group by 절에 명시된 컬럼이 인덱스 컬럼의 순서와 같아야 합니다.
+    -   아래의 모든 케이스는 인덱스가 적용되지 않습니다. (index : a, b, c)
+    -   group by b
+    -   group by b, a
+    -   group by a, c, b
+-   인덱스 컬럼 중 뒤에 있는 컬럼이 group by 절에 명시되지 않아도 인덱스는 사용할 수 있습니다.
+    -   아래의 모든 케이스는 인덱스가 적용됩니다. (index : a, b, c)
+    -   group by a
+    -   group by a, b
+    -   group by a, b, c
+-   반대로 인덱스 컬럼 중 앞에 있는 컬럼이 group by 절에 명시되지 않으면 인덱스를 사용할 수 없습니다.
+    -   아래의 케이스는 인덱스가 적용되지 않습니다. (index : a, b, c)
+    -   group by b, c
+-   인덱스에 없는 컬럼이 group by 절에 포함되어 있으면 인덱스가 적용되지 않습니다.
+    -   아래의 케이스는 인덱스가 적용되지 않습니다. (index : a, b, c)
+    -   group by a, b, c, d
+-   where 조건과 group by 가 함께 사용되면 where 조건이 동등 비교인 경우에 group by 절에 해당 컬럼이 없어도 인덱스가 적용됩니다.
+    -   아래의 쿼리는 모두 인덱스가 적용됩니다. (index : a, b, c)
+    -   where a = 1 group by b, c
+    -   where a = 1 and b = 'b' group by c
+
 ---
 
 ## 참고자료
