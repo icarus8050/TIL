@@ -32,7 +32,6 @@ create table membertest
 ```
 select *
 from membertest
-where group_no = 1
 limit 5000000, 1000;
 ```
 
@@ -41,13 +40,12 @@ limit 5000000, 1000;
 수행 속도 : 776ms
 
 ```
-select * from (
-        select member_no
-        from membertest
-        order by member_no
-        limit 5000000, 100
-    ) as i
-    inner join membertest as m
+select *
+from (
+    select t.member_no
+    from membertest
+    limit 5000000, 1000
+) as i join membertest as m
 on i.member_no = m.member_no;
 ```
 
