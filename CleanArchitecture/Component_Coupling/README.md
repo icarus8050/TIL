@@ -18,7 +18,7 @@
 
  Presenters 컴포넌트를 개발하는 개발자가 이 컴포넌트를 테스트하고자 한다면, 단순히 현재 사용 중인 버전의 Interactors와 Entities를 이용해서 Presenters 자체 버전을 빌드하면 됩니다. 즉, Presenters를 개발하는 개발자가 테스트를 구성할 때 더 적은 노력이 든다는 뜻이며, 고려해야 할 변수도 상대적으로 적어지게 됩니다.
 
-** 시스템 전체를 릴리스해야 할 때가 오면 릴리스 절차는 상향식으로 진행하게 됩니다.** 먼저 Entities 컴포넌트를 컴파일하고, 테스트하고 릴리스 합니다. 그러고 나서 Database와 Interactors에 대해서도 동일한 과정을 거칩니다. 그다음에는 Presenters, View, Controllers, Authorizer 순으로 진행합니다. Main은 마지막에 처리하게 됩니다.
+**시스템 전체를 릴리스해야 할 때가 오면 릴리스 절차는 상향식으로 진행하게 됩니다.** 먼저 Entities 컴포넌트를 컴파일하고, 테스트하고 릴리스 합니다. 그러고 나서 Database와 Interactors에 대해서도 동일한 과정을 거칩니다. 그다음에는 Presenters, View, Controllers, Authorizer 순으로 진행합니다. Main은 마지막에 처리하게 됩니다.
 
 ---
 
