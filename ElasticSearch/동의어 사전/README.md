@@ -30,8 +30,165 @@
 
 2\. 동의어 치환
 
+#### 동의어 추가
+
+ 동의어를 추가할 때 단어를 쉼표(,)로 분리하여 등록하는 방법입니다. 예를 들어, "Elasticsearch"와 "엘라스틱서치"를 동의어로 지정하고 싶다면 동의어 사전 파일에 "Elasticsearch, 엘라스틱서치"라고 등록하면 됩니다.
+
+#### 동의어 치환
+
+ 특정 단어를 어떤 단어로 변경하고 싶다면 동의어 치환 기능을 이용하면 됩니다. 동의어를 치환하면 원본 토큰이 제거되고 변경될 새로운 토큰이 추가됩니다. 동의어 치환은 동의어 추가와 구분하기 위해 화살표 "=>"로 표시합니다. 예를 들어 "Harry => 해리"라고 한다면 "Harry"를 "해리"로 변경해서 색인하겠다는 의미입니다.
+
+ 아까 <엘라스틱서치 설치 경로>/config/analysis 경로에 생성했던 synonym.txt 파일에 아래와 같이 동의어 사전을 작성하였습니다.
+
+![Synonym.txt](./images/synonym.png)
+
+ 첫 번째 행은 "Elasticsearch"와 "엘라스틱서치"를 동의어로 등록하는 방법입니다.
+
+ 두 번째 행은 "Harry"라는 토큰을 "해리"라는 토큰으로 치환하여 등록하는 방법입니다.
+
+ synonym.txt에 대한 예제 확인을 위해 아래와 같이 test\_index 라는 인덱스를 생성하였습니다.
+
+```
+PUT /test_index
+{
+  "settings": {
+    "index": {
+      "analysis": {
+        "analyzer": {
+          "synonym_test": {
+            "tokenizer": "whitespace",
+            "filter": [
+              "synonym"
+            ]
+          }
+        },
+        "filter": {
+          "synonym": {
+            "type": "synonym",
+            "synonyms_path": "analysis/synonym.txt"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+ 위의 인덱스는 synonym\_test 라는 분석기에 Tokenizer Filter를 whitespace로 설정하여 공백을 기준으로 텍스트를 토큰화하고, Token Filter를 synonym 토큰 필터로 설정하여 동의어를 처리할 수 있도록 정의되었습니다. 동의어 사전의 경로는 synonyms\_path 값에 지정합니다.
+
+ analyze API를 이용하여 분석기가 텍스트를 어떻게 분리하는지 확인해 보겠습니다.
+
+```
+GET /test_index/_analyze
+{
+  "analyzer": "synonym_test", 
+  "text": "Elasticsearch Harry Potter"
+}
+```
+
+ 위의 API를 테스트하면 "Elasticsearch"라는 단어는 "엘라스틱서치"와 동의어이므로 두 단어가 함께 토큰화 될 것입니다. 그리고 "Harry"라는 단어는 "해리"라는 단어로 치환 될 것입니다. 결과적으로 "Elasticsearch Harry Potter"라는 문장은 아래와 같이 토큰화 될 것입니다.
+
+\["Elasticsearch", "엘라스틱서치", "해리", "Potter"\]
+
+ 실제로도 위와 같은 결과를 나타내는지 실행 결과를 나타내는지 확인해 보겠습니다.
+
+```
+{
+  "tokens" : [
+    {
+      "token" : "Elasticsearch",
+      "start_offset" : 0,
+      "end_offset" : 13,
+      "type" : "word",
+      "position" : 0
+    },
+    {
+      "token" : "엘라스틱서치",
+      "start_offset" : 0,
+      "end_offset" : 13,
+      "type" : "SYNONYM",
+      "position" : 0
+    },
+    {
+      "token" : "해리",
+      "start_offset" : 14,
+      "end_offset" : 19,
+      "type" : "SYNONYM",
+      "position" : 1
+    },
+    {
+      "token" : "Potter",
+      "start_offset" : 20,
+      "end_offset" : 26,
+      "type" : "word",
+      "position" : 2
+    }
+  ]
+}
+
+```
+
+ 이번에는 동의어 사전에서 "Potter"를 "포터"로 치환하도록 synonym.txt 를 수정해보겠습니다.
+
+![Synonym_2.txt](./images/synonym_2.png)
+
+ 그리고나서 다시 아까 실행하였던 분석 쿼리를 실행해보면 방금 추가한 규칙이 적용되지 않는 것을 확인하실 수 있을겁니다. 동의어 사전이 변경될 경우 이를 인식시키기 위해서는 인덱스를 Reload 해야합니다. 인덱스에 설정된 동의어 사전의 모든 데이터는 Config 형태로 메모리에서 관리되는데 인덱스를 Reload해야만 이 정보가 갱신되기 때문입니다.
+
+ Reload를 위해 인덱스를 먼저 Close 해보겠습니다. 인덱스가 Close 상태가 되면 검색도 불가능해집니다.
+
+```
+POST /test_index/_close
+```
+
+ 인덱스를 다시 Open 오픈합니다.
+
+```
+POST /test_index/_open
+```
+
+ 위 과정을 통해 인덱스가 Reload 되었으며, 다시 한 번 분석 쿼리를 실행하면 변경된 동의어 사전 규칙이 잘 적용된 것을 확인하실 수 있습니다.
+
+```
+{
+  "tokens" : [
+    {
+      "token" : "Elasticsearch",
+      "start_offset" : 0,
+      "end_offset" : 13,
+      "type" : "word",
+      "position" : 0
+    },
+    {
+      "token" : "엘라스틱서치",
+      "start_offset" : 0,
+      "end_offset" : 13,
+      "type" : "SYNONYM",
+      "position" : 0
+    },
+    {
+      "token" : "해리",
+      "start_offset" : 14,
+      "end_offset" : 19,
+      "type" : "SYNONYM",
+      "position" : 1
+    },
+    {
+      "token" : "포터",
+      "start_offset" : 20,
+      "end_offset" : 26,
+      "type" : "SYNONYM",
+      "position" : 2
+    }
+  ]
+}
+```
+
 ---
 
 ## 참고자료
 
 [엘라스틱서치 실무 가이드](http://www.kyobobook.co.kr/product/detailViewKor.laf?ejkGb=KOR&mallGb=KOR&barcode=9791158391485&orderClick=LEa&Kc=) <<권택환, 김동우, 김흥래, 박진현, 최용호, 황희정 지음>>
+
+[https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-synonym-tokenfilter.html](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-synonym-tokenfilter.html)
+
+[https://www.elastic.co/kr/blog/boosting-the-power-of-elasticsearch-with-synonyms](https://www.elastic.co/kr/blog/boosting-the-power-of-elasticsearch-with-synonyms)
