@@ -183,6 +183,181 @@ POST /test_index/_open
 }
 ```
 
+## 색인 시점과 검색 시점의 동의어 사전
+
+ 동의어 사전은 색인 시점에 사용될 수 있고, 검색 시점에도 사용될 수 있습니다.
+
+#### 색인 시점
+
+ 색인 시점에 동의어 사전 필터를 사용하는 것은 색인되는 문서의 용어들이 최종적으로 추가되거나 치환되어 역색인이 된다는 뜻입니다.
+
+ 색인 시점에 동의어 사전 필터를 적용하는 것은 아래와 같은 단점이 있습니다.
+
+-   인덱스가 더 커질 수 있습니다. 모든 동의어가 색인되어야 하기 때문입니다.
+-   단어의 통계 정보에 의존하는 검색 점수가 동의어도 개수 계산에 포함되기 때문에 좀 더 일반적으로 사용되지 않는 단어들에 대한 통계가 왜곡 됩니다.
+-   동의어 규칙이 변경되더라도 기존의 색인이 변경되지 않습니다. 즉, 기존의 색인을 모두 삭제하고 색인을 다시 생성해야만 변경된 사전의 내용이 적용됩니다.
+
+ 특히, 마지막 두 가지가 큰 단점입니다. 색인 시 동의어 사전의 사용이 가진 장점은 성능입니다. 확장 프로세스에 대한 대가를 미리 다 지불하며, 쿼리마다 매번 수행해야 할 필요가 없기 때문에 일치되어야 하는 많은 용어들이 잠재적으로 결과에 포함될 수 있습니다.
+
+#### 검색 시점
+
+ 검색 시점에 동의어 사전 필터를 적용하는 것은 색인 시점에서 사용할 떄의 문제들 중 많은 부분이 발생하지 않습니다.
+
+-   인덱스의 크기에 영향을 미치지 않습니다.
+-   단어의 통계 정보가 동일하게 유지됩니다.
+-   동의어 규칙이 수정되더라도 문서를 재색인할 필요가 없습니다.
+
+ 일반적으로 검색 시점의 동의어 사용에 대한 장점은 색인 시점의 동의어를 사용할 때 얻을 수 있는 약간의 성능 상의 이점보다 큽니다.
+
+ 검색 시점의 동의어 사전은 아까 위에서 확인했던 것처럼 동의어 사전이 변경될 경우에 인덱스를 일시적으로 close 했다가 open하여 Reload를 해주어야 했습니다. 노드가 다시 시작되거나 닫힌 인덱스가 다시 열릴 때, 인덱스 생성 시에 분석기가 인스턴스화되기 때문에 이 작업이 필요했습니다.
+
+ 하지만 Elasticsearch 7.3 버전부터는 동의어 사전의 변경 사항을 적용하기 위해 인덱스를 열었다 닫았다하는 번거로움이 필요하지 않게 되었습니다. \_reload\_search\_analyzers API를 이용하면 인덱스의 모든 분석기가 다시 Reload 되도록 할 수 있습니다. 다음 예제를 통해 한 번 살펴보겠습니다.
+
+우선 아래와 같이 인덱스를 정의합니다. 아까와 다른점은 분석기의 동의어 필터에 updateable 속성이 추가되었다는 점입니다.
+
+```
+PUT /test_index
+{
+  "settings": {
+    "index": {
+      "analysis": {
+        "analyzer": {
+          "synonym_test": {
+            "tokenizer": "whitespace",
+            "filter": [
+              "synonym_test"
+            ]
+          }
+        },
+        "filter": {
+          "synonym_test": {
+            "type": "synonym",
+            "synonyms_path": "analysis/synonym.txt",
+            "updateable": true
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+ 다음은 동의어 사전을 아래와 같이 변경해보겠습니다.
+
+![Synonym_3](./images/synonym_3.png)
+
+ "Apple"이라는 토큰에 대해 "사과"라는 단어도 동의어로 묶도록 수정하였습니다.
+
+ 그리고 아래의 분석 쿼리를 수행해보면 동의어 사전이 아직 Reload 되지 않았기 때문에 "사과"에 대한 토큰이 분석되지 않은 것을 확인하실 수 있습니다.
+
+```
+GET /test_index/_analyze
+{
+  "analyzer": "synonym_test", 
+  "text": "Elasticsearch Harry Potter Apple"
+}
+```
+
+```
+{
+  "tokens" : [
+    {
+      "token" : "Elasticsearch",
+      "start_offset" : 0,
+      "end_offset" : 13,
+      "type" : "word",
+      "position" : 0
+    },
+    {
+      "token" : "엘라스틱서치",
+      "start_offset" : 0,
+      "end_offset" : 13,
+      "type" : "SYNONYM",
+      "position" : 0
+    },
+    {
+      "token" : "해리",
+      "start_offset" : 14,
+      "end_offset" : 19,
+      "type" : "SYNONYM",
+      "position" : 1
+    },
+    {
+      "token" : "포터",
+      "start_offset" : 20,
+      "end_offset" : 26,
+      "type" : "SYNONYM",
+      "position" : 2
+    },
+    {
+      "token" : "Apple",
+      "start_offset" : 27,
+      "end_offset" : 32,
+      "type" : "word",
+      "position" : 3
+    }
+  ]
+}
+```
+
+ 동의어 사전을 Reload 하기 위해 아래의 API를 호출합니다.
+
+```
+POST /test_index/_reload_search_analyzers
+```
+
+  그리고나서 다시 분석 쿼리를 수행해보면 "Apple"가 동의어로 설정된 "사과"까지 함께 분석한 결과를 확인하실 수 있습니다.
+
+```
+{
+  "tokens" : [
+    {
+      "token" : "Elasticsearch",
+      "start_offset" : 0,
+      "end_offset" : 13,
+      "type" : "word",
+      "position" : 0
+    },
+    {
+      "token" : "엘라스틱서치",
+      "start_offset" : 0,
+      "end_offset" : 13,
+      "type" : "SYNONYM",
+      "position" : 0
+    },
+    {
+      "token" : "해리",
+      "start_offset" : 14,
+      "end_offset" : 19,
+      "type" : "SYNONYM",
+      "position" : 1
+    },
+    {
+      "token" : "포터",
+      "start_offset" : 20,
+      "end_offset" : 26,
+      "type" : "SYNONYM",
+      "position" : 2
+    },
+    {
+      "token" : "Apple",
+      "start_offset" : 27,
+      "end_offset" : 32,
+      "type" : "word",
+      "position" : 3
+    },
+    {
+      "token" : "사과",
+      "start_offset" : 27,
+      "end_offset" : 32,
+      "type" : "SYNONYM",
+      "position" : 3
+    }
+  ]
+}
+
+```
+
 ---
 
 ## 참고자료
