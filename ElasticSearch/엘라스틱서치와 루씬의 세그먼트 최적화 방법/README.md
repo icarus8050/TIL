@@ -54,8 +54,36 @@
 -   Merge 과정을 통해 삭제 처리된 데이터가 실제 물리적으로 삭제 처리됩니다.
 -   검색할 세그먼트의 개수가 줄어들기 때문에 검색 성능이 좋아집니다.
 
+## 엘라스틱서치의 Refresh, Flush, Optimize API
+
+ 엘라스틱서치 샤드는 루씬 인덱스의 확장이고 세그먼트 기반의 내부 동작을 그대로 검색에 활용합니다. 다수의 샤드로 데이터가 분산 저장되어 있고 모든 샤드가 협력해서 데이터 검색을 수행합니다.
+
+ 엘라스틱서치는 루씬의 Flush, Commit, Merge 작업에 대해 확장하여 API로 제공있고, 튜닝이 가능합니다. 하지만 각 작업은 엘라스틱서치와 루씬이 서로 다른 명칭으로 부르기 때문에 주의해야 합니다. 명칭의 차이는 아래의 표와 같습니다.
+
+<table style="border-collapse: collapse; width: 100%; height: 76px;" border="1" data-ke-style="style8"><tbody><tr style="height: 19px;"><td style="width: 50%; height: 19px;">루씬</td><td style="width: 50%; height: 19px;">엘라스턱서치</td></tr><tr style="height: 19px;"><td style="width: 50%; height: 19px;">Flush</td><td style="width: 50%; height: 19px;">Refresh</td></tr><tr style="height: 19px;"><td style="width: 50%; height: 19px;">Commit</td><td style="width: 50%; height: 19px;">Flush</td></tr><tr style="height: 19px;"><td style="width: 50%; height: 19px;">Merge</td><td style="width: 50%; height: 19px;">Optimize API</td></tr></tbody></table>
+
+#### Refresh
+
+ 엘라스틱서치는 대용량의 데이터를 색인하고 실시간 검색에 가깝게 동작하기 위해 주기적으로 인메모리 버퍼에 대해 Flush 작업을 수행합니다. 이러한 Flush 작업을 엘라스틱서치에서는 Refresh라고 부르며 클러스터에 존재하는 모든 샤드에서 기본적으로 1초마다 한 번씩 Refresh 작업이 수행됩니다.
+
+#### Flush
+
+ 엘라스틱서치에서의 Flush는 루씬의 Commit 작업을 수행하고 새로운 Translog를 시작한다는 의미입니다. 이 작업을 루씬에서 제공하는 Flush 작업과 혼동해서는 안됩니다. Translog는 엘라스틱서치에서만 존재하는 개념으로 엘라스틱서치가 제공하는 고가용성과 밀접한 관련이 있습니다.
+
+ Translog는 샤드의 장애 복구를 위해 제공되는 특수한 파일입니다. 엘라스틱서치 샤드는 자신에게 일어난 모든 변경사항을 Translog에 먼저 기록한 후 내부에 존재하는 루씬을 호출합니다. 샤드는 1초마다 Refresh 작업을 수행해서 실시간 검색을 제공하고, 시간이 흐름에 따라 Translog의 파일 크기는 증가합니다. 지속적인 Refresh 작업으로 인해 검색은 가능하지만 아직 디스크에 물리적인 동기화가 되지 않은 상태이기 때문에 주기적으로 루씬의 Commit을 수행해야 합니다.
+
+ 정책에 의해 루씬 Commit이 정상적으로 수행되면 변경사항이 디스크에 물리적으로 기록되고 Translog 파일에서 Commit이 정상적으로 일어난 시점까지의 내역이 비로소 삭제됩니다.
+
+ 엘라스틱서치에서는 기본적으로 5초에 한 번씩 Flush 작업이 수행됩니다. Refresh와 마찬가지로 API를 이용하여 Flush 주기를 조절할 수도 있지만 이를 임의로 수정하는 것은 권장하지 않습니다.
+
+#### Optimize API
+
+ 엘라스틱서치에서는 인덱스 최적화를 위해 Optimize API를 제공합니다. 이를 forced merge API라고도 하는데, 말 그대로 루씬의 Merge 작업을 강제로 수행하는 것입니다. 이를 통해 파편화된 다수의 세그먼트를 하나의 거대한 세그먼트로 통합해서 조금 더 빠른 성능을 제공할 수 있게 됩니다. 일반적으로 변경이 더 이상 일어나지 않는 오래된 인덱스의 경우에는 하나의 세그먼트가 되도록 인덱스 내부의 세그먼트들을 강제로 병합하는 것이 성능상 유리합니다.
+
 ---
 
 ## 참고자료
 
 [엘라스틱서치 실무 가이드](http://www.kyobobook.co.kr/product/detailViewKor.laf?ejkGb=KOR&mallGb=KOR&barcode=9791158391485&orderClick=LAG&Kc=)<<권택환, 김동우, 김흥래, 박진현, 최용호, 황희정 지음>>
+
+[https://www.elastic.co/guide/en/elasticsearch/reference/current/indices.html](https://www.elastic.co/guide/en/elasticsearch/reference/current/indices.html)
