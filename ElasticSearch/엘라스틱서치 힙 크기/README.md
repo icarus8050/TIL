@@ -46,6 +46,30 @@
 
  하지만 이러한 트릭은 힙 크기가 32GB를 넘어가면 사용할 수 없습니다. **JVM은 힙 크기가 32GB를 넘어가는 순간 Compressed OOP를 일반적인 OOP로 자동 변환합니다.** 이 경우 모든 Obejct Pointer는 64비트 기반으로 바뀌어서 동작하고 32비트를 사용하는 이점을 모두 잃어버리게 됩니다. **이러한 이유로 엘라스틱서치에서는 힙 크기를 설정할 때 최대 32GB 이하로만 설정하라고 안내하는 것입니다.**
 
+ Compressed OOP는 JDK8 이상에서는 기본으로 이 옵션이 활성화되어 있기 때문에 32GB 이하의 힙 메모리를 설정하는 것만으로도 손쉽게 설정이 가능합니다. 아래의 방법으로 여러 옵션들을 조회할 수 있습니다.
+
+**기본 옵션 조회**
+
+java -XX:+PrintCommandLineFlags -version
+
+![JVM Option](./images/jvm_option.png)
+
+**숨어있는 옵션까지 포함한 전체 옵션 조회**
+
+java -server -XX:+UnlockExperimentalVMOptions -XX:+UnlockDiagnosticVMOptions -XX:+PrintFlagsFinal -version
+
+하지만 Compressed OOP가 정확하게 32GB이하에서 설정되면 좋겠지만 실제로는 32GB에 조금 못미치는 값이 설정되어야 이 옵션이 활성화됩니다. 아래의 결과에서 힙 사이즈에 대한 Compressed OOP 설정 유무를 확인해 보겠습니다.
+
+**Compressed OOP 설정 : true (32736MB = 31.96875GB)**
+
+![CompressedOOP1](./images/compressed_oop_1.png)
+
+**Compressed OOP 설정 : false (32737MB = 31.969727GB)**
+
+![CompressedOOP2](./images/compressed_oop_2.png)
+
+현재 저의 맥북에서는 Compressed OOP 설정을 위한 힙 사이즈의 Limit이 32736MB 입니다. 이처럼 32GB를 모두 사용하지 못하고 32GB에 조금 못미치는 힙 사이즈가 할당되어야 Compressed OOP 옵션이 활성화되는 것을 확인할 수 있습니다. 시스템마다 Limit 값이 다르고 32GB보다 작은 힙 사이즈에서 Compressed OOP 옵션이 활성화되는 이유는 J**VM의 힙 메모리가 0번지부터 시작되지 않기 때문입니다.** 객체를 가리키는 포인터가 0번지부터 시작되지 않았기 때문에 0번지부터 실제 시작 번지까지의 앞쪽에 위치한 일부 메모리 공간은 활용할 수 없게 되는 것입니다. 이론상으로는 최대 32GB이지만 실제로는 시작 번지가 0번지가 아니기 때문에 실제로는 32GB를 넘어버리게 되는 것입니다.
+
 ---
 
 ## 참고자료
