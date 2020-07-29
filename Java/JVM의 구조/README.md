@@ -52,6 +52,32 @@
 
  초기화 과정은 Class Loader Subsystem의 마지막 단계로, code와 static block에 정의되어 있는 모든 정적 변수를 할당합니다. 이는 클래스 내에서 위에서 부터 아래 순으로 진행되고, 부모 클래스에서 자식 클래스로의 상속 구조 순으로 진행됩니다.
 
+### Runtime Data Area
+
+ Runtime Data Area는 다음과 같이 5개의 구성 요소로 이루어져 있습니다.
+
+1\. Method Area
+
+ 클래스명, 부모 클래스명, 메서드와 변수명, 정적 변수 등의 클래스 수준의 정보들을 저장하는 영역입니다. JVM당 하나의 Method Area를 가지며 리소스들간에 공유되는 영역입니다.
+
+2\. Heap Area
+
+ 모든 오브젝트와 배열들이 이 영역에 저장됩니다. JVM당 하나의 Heap Area가 존재하며, Method Area와 Heap Area는 멀티 쓰레드 환경에서 메모리를 공유합니다. 즉, 이 영역에 저장된 데이터들은 thread-safe하지 않습니다.
+
+3\. Stack Area
+
+ 모든 쓰레드에 대해 JVM이 별도의 run-time stack을 생성하여 위치시키는 영역입니다. 모든 메소드 호출에 대해 각 진입점들에는 Stack Frame이라 불리는 Stack Memory가 생성됩니다. 모든 지역 변수들이 Stack Memory에서 생성됩니다. 이 영역은 쓰레드간에 데이터를 공유하지 않으므로 thread-safe한 영역입니다.
+
+4\. PC Register
+
+ PC(Program Counter) Register는 각 쓰레드별로 생성됩니다. PC Register에는 현재 실행중인 명령의 주소를 저장하고 있고, 명령이 실행되고나면 다음 명령으로 업데이트 됩니다.
+
+5\. Native Method Stack
+
+ Native Method Stack은 각 쓰레드별로 생성됩니다. 쓰레드가 Native Method를 호출하면 Java Stack을 벗어나게 되며, Native Method에 의해 Native Method Stack이 사용됩니다. Native Method에서 다시 자바 메소드를 호출하면 Java Stack으로 되돌아가게 됩니다. 여기서 Native Method는 다른 언어로 작성된 코드를 호출하기 위한 규약입니다. C나 C++ 언어에 접근하거나 하드웨어 접근용으로 쓰입니다.
+
+![Native Method Stack](./images/native-method-stack.gif)
+
 ---
 
 ## 참고자료
@@ -59,3 +85,5 @@
 [https://dzone.com/articles/jvm-architecture-explained](https://dzone.com/articles/jvm-architecture-explained)
 
 [https://www.geeksforgeeks.org/jvm-works-jvm-architecture/](https://www.geeksforgeeks.org/jvm-works-jvm-architecture/)
+
+[https://www.artima.com/insidejvm/ed2/jvm9.html](https://www.artima.com/insidejvm/ed2/jvm9.html)
