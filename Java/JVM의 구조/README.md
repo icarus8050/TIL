@@ -78,6 +78,35 @@
 
 ![Native Method Stack](./images/native-method-stack.gif)
 
+### Execution Engine
+
+ Execution Engine는 Runtime Data Area에 할당된 바이트 코드(.class)를 읽고 명령을 실행합니다. Execution Engine에는 세 가지 요소로 구성되어 있습니다.
+
+1\. Interpreter
+
+ 바이트 코드를 한 줄씩 해석하고 실행합니다. 이 인터프리터의 단점은 하나의 메서드를 여러 번 호출할 때마다 해석 요청이 필요하다는 점입니다.
+
+2\. JIT Compiler (Just-In-Time Compiler)
+
+ JIT Compiler는 Interpreter의 단점을 보완합니다. JIT는 바이트 코드를 컴파일하여 Native Code로 변환하고, 인터프리터에서 반복되는 메서드 호출이 발견되면 인터프리터에 다시 재해석 요청을 하는 것이 아니라 JIT에서 Native Code를 제공합니다. 이러한 방법은 인터프리터에게 매번 같은 메서드를 해석하도록 요청하지 않게하므로 효율성이 높아집니다.
+
+3\. Garbage Collector
+
+ 참조되지 않는 객체들을 수집하고 제거하는 역할을 합니다. Garbage Collector는 System.gc() 메서드를 통해 트리거를 실행할 수는 있지만, 실제로 Garbage Collector가 실행될지는 보장하지 않습니다. System.gc() 메서드는 모든 쓰레드를 중단시키기 때문에 실제로 코드 레벨에서는 호출해서는 안됩니다.
+
+### Java Native Interface (JNI)
+
+ JNI는 Native Method Library와 상호작용하는 인터페이스이며, 실행에 필요한 Native Library(C, C++)들을 제공합니다. JNI는 JVM이 C/C++ 라이브러리들을 호출할 수 있게하고, 하드웨어에 특정될 수 있는 C/C++ 라이브러리에 호출 될 수 있게 합니다.
+
+ 번역이 좀 어려워서 아래에 원문을 별첨합니다. (혹시 더 정확한 해석이 있다면 조언 부탁드립니다.)
+
+  
+ It is an interface which interacts with the Native Method Libraries and provides the native libraries(C, C++) required for the execution. It enables JVM to call C/C++ libraries and to be called by C/C++ libraries which may be specific to hardware.
+
+### Native Method Libraries
+
+ Execution Engine에서 필요로하는 Native Libraries의 컬렉션입니다.
+
 ---
 
 ## 참고자료
