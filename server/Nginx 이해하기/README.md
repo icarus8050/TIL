@@ -14,6 +14,12 @@
 
  Nginx는 **Event-Driven** 구조로 동작하기 때문에 한 개 또는 고정된 프로세스만 생성하여 사용하고, 비동기 방식으로 요청들을 Concurrency하게 처리할 수 있습니다. 위의 그림에서 보이듯이 Nginx는 새로운 요청이 들어오더라도 새로운 프로세스와 쓰레드를 생성하지 않기 때문에 프로세스와 쓰레드 생성 비용이 존재하지 않고, 적은 자원으로도 효율적인 운용이 가능합니다. 이러한 Nginx의 장점 덕분에 단일 서버에서도 동시에 많은 연결을 처리할 수 있습니다.
 
+## Nginx의 구조
+
+ Nginx는 하나의 Master Process와 다수의 Worker Process로 구성되어 실행됩니다. Master Process는 설정 파일을 읽고, 유효성을 검사합니다. 그리고 Worker Process를 관리합니다. 모든 요청은 Worker Process에서 처리합니다.  Worker Process의 개수는 설정 파일에서 정의되며, 정의된 프로세스 개수와 사용 가능한 CPU 코어 숫자에 맞게 자동으로 조정됩니다.
+
+![Nginx Architecture](./images/nginx_architecture.jpg)
+
 ## Reverse Proxy
 
 ![Reverse Proxy](./images/reverse_proxy.jpg)
@@ -26,6 +32,10 @@
 ---
 
 ## 참고자료
+
+[https://nginx.org/en/docs/beginners\_guide.html](https://nginx.org/en/docs/beginners_guide.html)
+
+[https://subscription.packtpub.com/book/networking\_and\_servers/9781785281839/1/ch01lvl1sec08/the-nginx-architecture](https://subscription.packtpub.com/book/networking_and_servers/9781785281839/1/ch01lvl1sec08/the-nginx-architecture)
 
 [https://medium.com/sjk5766/%EB%84%8C-%EB%AD%90%EB%8B%88-nginx-9a8cae25e964](https://medium.com/sjk5766/%EB%84%8C-%EB%AD%90%EB%8B%88-nginx-9a8cae25e964)
 
