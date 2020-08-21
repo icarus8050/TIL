@@ -194,6 +194,21 @@ public class ColorPoint {
 
  float과 double을 제외한 기본 타입은 == 연산자로 비교하고, 참조 타입 필드는 각각의 equals()로, **float와 double 필드는 각각 정적인 메서드인 Float.compare(float, float)와 Double.compare(double, double)로 비교**합니다. float과 double을 특별 취급하는 이유는 Float.NoN, -0.0f, 특수한 부동소수 값 등을 다뤄야 하기 때문입니다. Float.equals()와 Double.equals() 메서드를 대신 사용할 수도 있지만, 이 메서드들은 오토박싱을 수반할 수 있으니 성능상 좋지 않습니다.
 
+## 주의사항
+
+-   equals()를 재정의할 때는 hashCode()도 반드시 재정의해야 합니다.
+-   너무 복잡하게 해결하려 들지 않아도 됩니다. 필드의 동치성만 검사해도 equals() 규약을 어렵지 않게 지킬 수 있습니다.
+-   Object 외의 타입을 매개변수로 받는 equals() 메서드는 선언하지 말아야 합니다.
+
+```
+//잘못된 예 - 입력 타입은 반드시 Object여야 합니다!
+public boolean equals(MyClass o) {
+    ...
+}
+```
+
+ 위의 메서드는 Object.equals()를 재정의 한 것이 아니고, 다른 매개변수를 받는 메서드를 오버로딩을 한 것입니다.
+
 ---
 
 ## 참고자료
