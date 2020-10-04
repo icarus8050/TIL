@@ -1,5 +1,3 @@
-# Garbage Collector 이해하기
-
 ## Garbage Collector
 
  가비지 컬렉터는 애플리케이션의 할당된 동적 메모리를 자동으로 관리합니다. gc는 다음의 동작들을 통해 동적 메모리 관리를 자동으로 수행합니다.
@@ -148,6 +146,34 @@ HotSpot VM에서 이를 해결하기 위한 것이**TLAB(****Thread-Local Alloca
 
  조각난 메모리가 많아 Compation을 수행하게 되면 다른 gc 방식보다 STW 시간이 길기 때문에 CMS를 사용할 때는 Compaction 작업을 얼마나 자주, 오랫동안 수행되는지 확인해야 합니다.
 
+#### G1 (Garbage First, +XX:UseG1GC)
+
+ G1은 앞서 살펴본 gc들과는 다른 방식으로 힙 메모리를 관리합니다. 병렬/CMS 수집기와는 달리 세대마다 경계가 뚜렷한, 연속된 메모리 공간이 없고 반구형 힙 레이아웃 방식과도 전혀 무관합니다.
+
+ G1은 논리적 단위로 나누어진 리전(Region)으로 구성됩니다. 리전을 이용하면 generation을 불연속적으로 배치할 수 있고, 수집기가 매번 실행될 때마다 전체 가비지를 수집할 필요가 없습니다.
+
+**G1 GC의 특징**
+
+-   큰 메모리를 가진 멀티 프로세서 시스템에서 사용되기 위해 개발된 gc 입니다.
+-   CMS보다 훨씬 튜닝하기 쉽습니다.
+-   조기 승격에 덜 취약합니다. (조기 승격이란 할당률이 너무 높아서 Old 영역으로 너무 빨리 승격되는 문제입니다.)
+-   대용량 힙에서 확장성(특히, 중단 시간)이 우수합니다.
+-   자바 9부터는 디폴트 gc 입니다.
+
+![G1 GC](./images/g1gc.png)
+
+ G1의 힙은 리전(Region)으로 구성됩니다. 리전을 이용하면 세대를 불연속적으로 배치할 수 있고, 수집기가 매번 실행될 때마다 전체 가비지를 수집할 필요가 없습니다.
+
+ G1 수집기는 RSet(Remembered Set)을 통해 어떤 객체가 어떤 리전에 저장되어 있는지 추적합니다. 덕분에 G1은 영역 내부를 바라보는 레퍼런스를 찾으려고 전체 힙을 다 뒤질 필요 없이 RSet만 꺼내보면 됩니다.
+
+G1의 수집 단계는 다음과 같습니다.
+
+1.  Initial Mark - **STW** : Old 영역에 존재하는 객체들이 참조하는 Survivor 영역을 찾습니다. STW가 발생합니다.
+2.  Root Region Scanning : Initial Mark 단계에서 식별한 Survivor 영역에서 Old 영역을 가리키는 레퍼런스를 식별합니다.
+3.  Concurrent Mark : 힙 전체에 걸쳐 접근 가능한 살아있는 객체를 찾습니다.
+4.  Remark - **STW** : Concurrent Mark 단계를 검증하고, 최종적으로 살아남을 객체들을 식별합니다. 이 단계에서는 SATB(Snapshot-At-The-Beginning) 알고리즘이 사용됩니다. STW가 발생합니다.
+5.  Cleanup - **STW** : 애플리케이션을 멈추고(STW) 살아있는 객체가 가장 적은 리전에 대한 미사용 객체를 제거합니다. 이후 STW를 끝내고, 앞서 GC 과정에서 완전히 비워진 리전을 Freelist에 추가하여 재사용될 수 있게 합니다.
+6.  Copy : GC 대상 리전이었지만 Cleanup 과정에서 완전히 비워지지 않은 리전의 살아남은 객체들을 새로운 리전에 복사하여 Compaction 작업을 수행합니다.
 
 ---
 
@@ -166,3 +192,5 @@ HotSpot VM에서 이를 해결하기 위한 것이**TLAB(****Thread-Local Alloca
 [dzone.com/articles/java-memory-architecture-model-garbage-collection](https://dzone.com/articles/java-memory-architecture-model-garbage-collection)
 
 [www.infoworld.com/article/2078645/jvm-performance-optimization-part-3-garbage-collection.html](https://www.infoworld.com/article/2078645/jvm-performance-optimization-part-3-garbage-collection.html)
+
+[johngrib.github.io/wiki/java-g1gc/](https://johngrib.github.io/wiki/java-g1gc/)
