@@ -53,3 +53,67 @@
  URL, HTTP 헤더, 쿠키 등과 같은 사용자 요청을 기반으로 로드밸런싱을 수행합니다. 즉, 패킷의 내용을 확인하고 그 내용에 따라 트래픽을 특정 서버에 분배하는 것이 가능합니다. 이를 통해 마이크로서비스간에 통신을 유연하고 효율적으로 구성할 수 있습니다. 하지만 패킷 내용을 복호화하여 처리를 해야하므로 부하가 많이 걸릴 수 있다는 단점이 있습니다.
 
  주요 프로토콜로는 HTTP, HTTPS, FTP가 있습니다.
+
+## 로드밸런싱의 구성
+
+### Router Mode
+
+![Router Mode](./images/router_mode.png)
+
+#### Service Request
+
+-   사용자가 서비스 요청 시, Destination IP는 L4의 VIP 입니다.
+-   L4에서 Real Server로 전송 시, Destination IP를 VIP에서 Real Server로 NAT 합니다. (Destination NAT)
+-   Network 대역이 변경되었으므로 MAC주소도 Source와 Destination MAC 모두 Rewriting 됩니다.
+
+#### Service Response
+
+-   Real Server에서 서비스 응답 시, 목적지 IP가 다른 대역이므로 Gateway(L4)로 전송합니다.
+-   L4에서 Source IP를 L4의 서비스 VIP로 NAT해서 클라이언트에게 응답합니다. (Source NAT)
+
+ L4를 중심으로 상/하단의 IP대역이 서로 다르게 구성됩니다. L4는 Server 대역 Network의 Gateway 역할을 합니다.
+
+### Transparent Mode
+
+![Transparent Mode](./images/transparent_mode.png)
+
+#### Service Request
+
+-   사용자가 서비스 요청 시, Destination IP는 L4의 VIP 입니다.
+-   L4에서 Real Server로 전송 시, Destination IP를 VIP에서 Real Server로 NAT 합니다. (Destination NAT)
+-   동일 Network 대역이므로, Destination MAC 주소만 Rewriting 됩니다.
+
+#### Service Response
+
+-   Real Server에서 서비스 응답 시, Destination IP가 다른 대역의 IP이므로 Gateway(Router)로 전송합니다.
+-   Server에서 Gateway 구간에 L4를 거치면서 Source IP를 L4의 서비스 IP로 NAT을 수행합니다. (Source NAT)
+-   동일한 Network 대역이므로 MAC 주소는 따로 Rewriting 되지 않습니다.
+
+### One-Arm Mode
+
+![One-Arm Mode](./images/one_arm_mode.png)
+
+#### Service Request
+
+-   사용자가 서비스 요청 시, Destination IP는 L4의 VIP 입니다.
+-   L4에서 Real Server로 전송 시, Destination IP를 VIP에서 Real Server로 NAT을 수행합니다. (Destination NAT)
+-   Destination으로 전송을 위해서 Destination MAC 주소도 Rewriting 합니다.
+-   Real Server에서 L4로의 전송을 위해서 Source IP도 L4의 IP Pool의 IP로 NAT을 수행합니다. (Source NAT)
+
+#### Service Response
+
+-   Real Server에 서비스 응답 시, 목적지는 L4에서 NAT된 IP Pool의 IP로 보냅니다.
+-   L4에서 클라이언트로 응답 시, Source IP를 Real Server의 IP에서 L4의 서비스 VIP로 NAT을 수행합니다. (Source NAT)
+-   Destination IP를 IP Pool의 IP에서 클라이언트 IP로 NAT을 수행합니다. (Destination NAT)
+
+ One-Arm Mode는 클라이언트의 IP가 Server에 전달되지 않기 때문에 Server가 실제 클라이언트의 IP를 이용해야 할 경우 부적합한 기법입니다. 일반적으로 권고되지 않는 구성 방법입니다.
+
+---
+
+## 참고자료
+
+[theplmingspace.tistory.com/434](https://theplmingspace.tistory.com/434)
+
+[nesoy.github.io/articles/2018-06/Load-Balancer](https://nesoy.github.io/articles/2018-06/Load-Balancer)
+
+[ssup2.github.io/theory\_analysis/SLB/](https://ssup2.github.io/theory_analysis/SLB/)
