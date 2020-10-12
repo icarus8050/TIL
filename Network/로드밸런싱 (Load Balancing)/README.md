@@ -108,6 +108,34 @@
 
  One-Arm Mode는 클라이언트의 IP가 Server에 전달되지 않기 때문에 Server가 실제 클라이언트의 IP를 이용해야 할 경우 부적합한 기법입니다. 일반적으로 권고되지 않는 구성 방법입니다.
 
+### DSR (Direct Server Return)
+
+ 방금 위에서 소개한 기법들은 모든 Inbound, Outbound Packet을 LB를 거치기 때문에 LB에 많은 부하가 발생합니다. 대부분의 서비스들의 트래픽은 보통 Inbound 보다 Outbound Packet의 양이 많습니다. DSR은 Outbound Packet이 LB를 거치지 않고, 클라이언트로 전달하게 만들어 LB의 부하를 줄일 수 있습니다.
+
+#### L2DSR
+
+![L2DSR](./images/l2dsr.png)
+
+ L2DSR은 Inbound Packet의 Destination MAC을 바꾸는 기법입니다.
+
+-   LB는 Inbound Packet의 MAC 주소로 변환한 후 Real Server에게 전달합니다.
+-   Real Server는 VIP 주소를 갖고 있는 Loopback Interface를 통해 Source IP를 변환하여 클라이언트에게 Outbound Packet을 전달합니다.
+
+ L2DSR은 Inbound Packet의 MAC 주소만 변경하기 때문에 LB와 Server들은 모두 같은 네트워크에 속해야 합니다. 그로 인해 물리적인 회선, 위치등의 한계가 있는 구성 방식입니다.
+
+#### L3DSR
+
+ L3DSR은 서로 다른 네트워크에 속해야 한다는 L2DSR 구성 방식의 한계를 극복하기 위한 기법입니다. L3DSR은 IP 패킷의 DSCP 필드를 수정하여 L4 스위치에서 받은 클라이언트 요청을 L3 레이어를 통해 서버가 직접 응답할 수 있게 합니다.
+
+ DSCP 필드 수정을 통한 커뮤니케이션이 가능하게 하려면 L4 스위치와 서버 간의 합의점이 필요합니다. 즉, DSCP와 가상 IP의 연결이 필요합니다. LB와 모든 Server는 DSCP/VIP Mapping Table을 알고 있습니다.
+
+![L3DSR](./images/l3dsr.png)
+
+-   LB는 Inbound Packet의 Destination IP를 Real Server의 IP로 변환하고, Packet의 Destination IP 정보와 Mapping Table 정보를 바탕으로 DSCP 값도 변경합니다.
+-   Real Server는 Mapping Table과 Loopback Interface를 통해 Source IP를 변경하고 DSCP 값을 0으로 만들어 Client에게 바로 전달합니다.
+
+![L3DSR_flow](./images/l3dsr_flow.png)
+
 ---
 
 ## 참고자료
@@ -117,3 +145,5 @@
 [nesoy.github.io/articles/2018-06/Load-Balancer](https://nesoy.github.io/articles/2018-06/Load-Balancer)
 
 [ssup2.github.io/theory\_analysis/SLB/](https://ssup2.github.io/theory_analysis/SLB/)
+
+[smashingpumpkins.tistory.com/entry/L3DSR-%EA%B5%AC%EC%84%B1](https://smashingpumpkins.tistory.com/entry/L3DSR-%EA%B5%AC%EC%84%B1)
