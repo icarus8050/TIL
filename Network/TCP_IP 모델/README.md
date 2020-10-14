@@ -2,7 +2,7 @@
 
 ## TCP/IP 모델
 
-![TCP/IP](./images/tcp_ip.png)
+![TCP/IP](./images/tcp_ip.jpg)
 
  네트워크 통신을 위한 과정을 분류하는 모델로 OSI 7 계층이라는 표준이 존재합니다. 그리고 우리가 HTTP 통신을 하기 위해 주로 사용하는 TCP/IP 프로토콜을 OSI 7 계층에 맞추어 추상화한 것이 위 그림의 TCP/IP 모델입니다.
 
