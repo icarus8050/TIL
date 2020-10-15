@@ -70,6 +70,57 @@
 
  데이터를 디코딩하여 사용자에게 데이터를 넘깁니다.
 
+## 클라이언트와 서버의 통신
+
+#### DNS Server에서 해당 도메인의 IP 주소 검색
+
+![DNS](./images/dns_flow.png)
+
+1\. 클라이언트는 DNS Server에 aaa.com 이라는 도메인의 IP 주소를 요청합니다.
+
+2\. DNS 서버는 해당 도메인의 IP 주소를 응답합니다.
+
+DNS Server를 검색하는 과정은 아래에 정리되어 있습니다.
+
+[icarus8050.tistory.com/31?category=358436](https://icarus8050.tistory.com/31?category=358436)
+
+[aws.amazon.com/ko/route53/what-is-dns/](https://aws.amazon.com/ko/route53/what-is-dns/)
+
+#### 서버와 ARP 과정을 통해 MAC Address 요청
+
+ 네트워크 계층에서 IP를 이용하여 상대방에게 패킷을 전달하는데, 해당 패킷을 전달하기 위해서는  수신자의 물리적 주소인 **MAC 주소**를 알고 있어야 합니다. MAC 주소는 컴퓨터에 장착되어 있는 랜카드의 고유한 주소값으로, 6옥텟(48bit)으로 구성되어 있습니다. 클라이언트는 서버의 MAC 주소를 알아내기 위해 ARP(Address Resolution Protocol)라는 과정을 거칩니다.
+
+![ARP Header](./images/arp.png)
+
+![ARP Flow](./images/arp_flow.png)
+
+ 클라이언트는 앞의 과정에서 찾은 111.222.333.444 아이피 주소로 ARP 요청을 통해 MAC 주소를 요청합니다. 라우터에서는 ARP 테이블을 통해 자신과 연결된 서버의 MAC 주소를 검색하고, 만약 있다면 해당 MAC 주소를 응답합니다.
+
+ 만약 ARP 테이블에 해당 MAC 주소가 존재하지 않는다면 스위치에게 MAC 주소를 요청합니다. 이때 스위치에서는 **MAC Address 테이블**을 검색하고, 찾고자 하는 MAC 주소가 존재한다면 aging 타이머를 갱신하고 응답합니다. MAC Address 테이블에 없다면, 스위치와 연결된 모든 컴퓨터에 **브로드 캐스팅**이 발생합니다. 그 후에 찾은 MAC 주소를 MAC Address 테이블에 저장하고 응답하게 됩니다.
+
+#### 대상 서버와의 통신
+
+ 클라이언트는 서버측의 MAC 주소를 알아냈으므로 통신이 가능해졌습니다. 이제 두 호스트간에 통신을 위해 TCP 소켓을 통해 연결을 하고, 데이터를 통신하게 됩니다.
+
+![Transfer Flow](./images/transfer_flow.jpg)
+
+ TCP 연결은 3-Way Handshake를 통해 서로 3번의 통신으로 이루어 집니다.
+
+1.  클라이언트는 SYN(a) 패킷을 보내고, 응답을 기다리는 SYN\_SENT 상태가 됩니다.
+2.  서버는 요청을 수락했다는 의미로 SYN(b)와 ACK(a + 1)이 담긴 패킷을 보내고, SYN\_RECEIVED 상태가 됩니다.
+3.  클라이언트는 서버로부터 SYN(b)와 ACK(a + 1) 패킷을 받고, ACK(b + 1)를 서버로 보내면 연결이 성립되어 두 호스트는 ESTABLISHED 상태가 됩니다.
+
+ 이후에는 서로 필요한 데이터를 주고 받습니다.
+
+![Transfer Flow2](./images/transfer_flow2.png)
+
+TCP 연결 해제는 4-Way Handshake를 통해 연결이 해제됩니다.
+
+1.  클라이언트는 연결을 종료하겠다는 FIN 플래그를 보냅니다.
+2.  서버는 확인 메시지로 ACK를 보내고 자신의 데이터를 모두 보낼 때까지 CLOSE\_WAIT 상태가 됩니다.
+3.  서버가 데이터를 모두 보내고 통신이 끝났으면 연결이 종료되었다고 클라이언트에게 FIN 플래그를 전송합니다.
+4.  클라이언트는 FIN 메시지를 확인했다는 메시지(ACK)를 보내고, 연결이 종료됩니다.
+
 ---
 
 ## 참고자료
@@ -77,3 +128,5 @@
 [blog.naver.com/sung\_mk1919/221177021021](https://blog.naver.com/sung_mk1919/221177021021)
 
 [www.slideshare.net/ssuser0bcc46/ss-46924249](https://www.slideshare.net/ssuser0bcc46/ss-46924249)
+
+[owlgwang.tistory.com/1](https://owlgwang.tistory.com/1)
