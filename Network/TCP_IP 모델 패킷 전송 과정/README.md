@@ -36,7 +36,7 @@
 
  상위 계층의 데이터에 TCP 헤더를 붙입니다. 데이터의 크기가 크면 MTU 단위로 데이터를 쪼개고, 이를 세그먼트라고 합니다. 세그먼트를 송신할 때마다 쪼개진 데이터의 순서를 알 수 있도록 Sequence 번호가 TCP 헤더에 기록됩니다. 이는 네트워킹의 상황에 따라 수신지에 도착하는 데이터의 순서가 바뀔 수 있기 때문입니다. 수신지에서 패킷이 누락되었는지 여부를 확인할 수도 있습니다.
 
-![TCP Header](./images/tcp_header.png)
+![TCP Header](./images/tcp_header.png)forming
 
 **Internet Layer**
 
